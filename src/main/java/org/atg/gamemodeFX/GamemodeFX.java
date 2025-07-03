@@ -31,19 +31,36 @@ public final class GamemodeFX extends JavaPlugin implements Listener {
         log.info("Plugin is disabled");
     }
 
+    private void joinSpectators(Player player){
+        spectatorPlayers.add(player);
+        onlinePlayers.remove(player);
+        for(Player players : onlinePlayers){
+            players.hidePlayer(plugin, player);
+        }
+        for(Player spectators : spectatorPlayers){
+            player.showPlayer(plugin, spectators);
+        }
+    }
+
+    private void quitSpectators(Player player){
+        spectatorPlayers.remove(player);
+        onlinePlayers.add(player);
+        for(Player spectators : spectatorPlayers){
+            player.hidePlayer(plugin, spectators);
+        }
+        for(Player players : onlinePlayers){
+            players.showPlayer(plugin, player);
+        }
+    }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
         if(player.getGameMode() == GameMode.SPECTATOR) {
             event.joinMessage(null);
-            for(Player players : onlinePlayers){
-                players.hidePlayer(plugin, player);
-            }
+            joinSpectators(player);
         } else {
-            onlinePlayers.add(player);
-            for (Player spectator : spectatorPlayers){
-                player.hidePlayer(plugin, spectator);
-            }
+            quitSpectators(player);
         }
     }
 
@@ -58,24 +75,7 @@ public final class GamemodeFX extends JavaPlugin implements Listener {
     @EventHandler
     public void onGamemodeSwitch(PlayerGameModeChangeEvent event){
         Player player = event.getPlayer();
-        if(event.getNewGameMode() == GameMode.SPECTATOR){
-            onlinePlayers.remove(player);
-            spectatorPlayers.add(player);
-            for(Player players : onlinePlayers){
-                players.hidePlayer(plugin, player);
-            }
-            for(Player spectators : spectatorPlayers){
-                player.showPlayer(plugin, spectators);
-            }
-        }else if(player.getGameMode() == GameMode.SPECTATOR){
-            onlinePlayers.add(player);
-            spectatorPlayers.remove(player);
-            for(Player spectators : spectatorPlayers){
-                player.hidePlayer(plugin, spectators);
-            }
-            for(Player players : onlinePlayers){
-                players.showPlayer(plugin, player);
-            }
-        }
+        if(event.getNewGameMode() == GameMode.SPECTATOR) joinSpectators(player);
+        else if(player.getGameMode() == GameMode.SPECTATOR) quitSpectators(player);
     }
 }
