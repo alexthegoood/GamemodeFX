@@ -1,17 +1,81 @@
 package org.atg.gamemodeFX;
 
+import org.bukkit.GameMode;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class GamemodeFX extends JavaPlugin {
+import java.util.ArrayList;
+import java.util.logging.Logger;
+
+public final class GamemodeFX extends JavaPlugin implements Listener {
+
+    ArrayList<Player> spectatorPlayers = new ArrayList<>();
+    ArrayList<Player> onlinePlayers = new ArrayList<>();
+
+    private final Logger log = getLogger();
+    private final JavaPlugin plugin = this;
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
-
+        log.info("Plugin is enabled");
+        getServer().getPluginManager().registerEvents(this, this);
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        log.info("Plugin is disabled");
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event){
+        Player player = event.getPlayer();
+        if(player.getGameMode() == GameMode.SPECTATOR) {
+            event.joinMessage(null);
+            for(Player players : onlinePlayers){
+                players.hidePlayer(plugin, player);
+            }
+        } else {
+            onlinePlayers.add(player);
+            for (Player spectator : spectatorPlayers){
+                player.hidePlayer(plugin, spectator);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event){
+        Player player = event.getPlayer();
+        if(player.getGameMode() == GameMode.SPECTATOR) event.quitMessage(null);
+        spectatorPlayers.remove(player);
+        onlinePlayers.remove(player);
+    }
+
+    @EventHandler
+    public void onGamemodeSwitch(PlayerGameModeChangeEvent event){
+        Player player = event.getPlayer();
+        if(event.getNewGameMode() == GameMode.SPECTATOR){
+            onlinePlayers.remove(player);
+            spectatorPlayers.add(player);
+            for(Player players : onlinePlayers){
+                players.hidePlayer(plugin, player);
+            }
+            for(Player spectators : spectatorPlayers){
+                player.showPlayer(plugin, spectators);
+            }
+        }else if(player.getGameMode() == GameMode.SPECTATOR){
+            onlinePlayers.add(player);
+            spectatorPlayers.remove(player);
+            for(Player spectators : spectatorPlayers){
+                player.hidePlayer(plugin, spectators);
+            }
+            for(Player players : onlinePlayers){
+                players.showPlayer(plugin, player);
+            }
+        }
     }
 }
