@@ -61,7 +61,7 @@ public final class GamemodeFX extends JavaPlugin implements Listener {
 
         world.spawnParticle(Particle.FLASH, centerY, 1, 0.0, 0.0, 0.0, 0.0);
         world.spawnParticle(particle, centerY, count*occupiedBlocksHeightY, ofsX*playerScale, ofsY*playerScale, ofsZ*playerScale, extra*playerScale);
-        world.playSound(centerY, sound, 1.0f, pitch);
+        world.playSound(centerY, sound, playerScale/2, pitch);
     }
 
     @EventHandler
